@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.RAILWAY_PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
@@ -22,6 +22,19 @@ app.use('/images', express.static(path.join(__dirname, '../../public/images')));
 
 // API routes
 app.use('/', api);
+
+// Anti-sleep mechanism
+const keepAlive = () => {
+  console.log('Anti-sleep ping:', new Date().toISOString());
+  fetch('https://whohouse-production.up.railway.app')
+    .catch(error => console.log('Keep-alive ping failed:', error));
+};
+
+// Ping every 14 minutes (before Railway's 15-minute sleep timeout)
+setInterval(keepAlive, 840000);
+
+// Initial ping
+keepAlive();
 
 // Error handling
 app.use((err, req, res, next) => {
