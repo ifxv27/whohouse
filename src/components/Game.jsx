@@ -10,7 +10,7 @@ import CharacterModal from './modals/CharacterModal';
 const Game = () => {
   const navigate = useNavigate();
   const { currentPlayer, isAuthenticated } = usePlayerStore();
-  const { setPlayerProfile } = useStore();
+  const { setPlayerProfile, fetchCards } = useStore();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
 
   useEffect(() => {
@@ -18,8 +18,10 @@ const Game = () => {
       navigate('/');
     } else {
       setPlayerProfile(currentPlayer);
+      // Fetch cards when component mounts
+      fetchCards();
     }
-  }, [isAuthenticated, currentPlayer, navigate, setPlayerProfile]);
+  }, [isAuthenticated, currentPlayer, navigate, setPlayerProfile, fetchCards]);
 
   const handleCloseModal = () => {
     setSelectedCharacter(null);

@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import axios from 'axios';
+import { API_URL } from '../config';
 
 const CARD_RANKS = {
   COMMON: { value: 1, stars: '⭐' },
@@ -53,25 +55,50 @@ export const useStore = create(
         }));
       },
 
+      // Fetch cards from backend
+      fetchCards: async () => {
+        try {
+          const response = await axios.get(`${API_URL}/api/cards`);
+          set({ cards: response.data });
+        } catch (error) {
+          console.error('Error fetching cards:', error);
+        }
+      },
+
       // Card Management
-      addCard: (card) => {
-        set(state => ({
-          cards: [...state.cards, { ...card, id: card.id || `card-${Date.now()}` }]
-        }));
+      addCard: async (card) => {
+        try {
+          const response = await axios.post(`${API_URL}/api/cards`, card);
+          set(state => ({
+            cards: [...state.cards, response.data]
+          }));
+        } catch (error) {
+          console.error('Error adding card:', error);
+        }
       },
 
-      updateCard: (updatedCard) => {
-        set(state => ({
-          cards: state.cards.map(card => 
-            card.id === updatedCard.id ? updatedCard : card
-          )
-        }));
+      updateCard: async (updatedCard) => {
+        try {
+          await axios.put(`${API_URL}/api/cards/${updatedCard.id}`, updatedCard);
+          set(state => ({
+            cards: state.cards.map(card =>
+              card.id === updatedCard.id ? updatedCard : card
+            )
+          }));
+        } catch (error) {
+          console.error('Error updating card:', error);
+        }
       },
 
-      deleteCard: (id) => {
-        set(state => ({
-          cards: state.cards.filter(card => card.id !== id)
-        }));
+      deleteCard: async (id) => {
+        try {
+          await axios.delete(`${API_URL}/api/cards/${id}`);
+          set(state => ({
+            cards: state.cards.filter(card => card.id !== id)
+          }));
+        } catch (error) {
+          console.error('Error deleting card:', error);
+        }
       },
 
       getCardsByCategory: (category) => {
@@ -98,14 +125,16 @@ export const useStore = create(
         return state.cards.filter(card => card.category === 'starter');
       },
 
-      setCardAsStarter: (cardId, isStarter = true) => {
-        set(state => ({
-          cards: state.cards.map(card =>
-            card.id === cardId
-              ? { ...card, category: isStarter ? 'starter' : card.category }
-              : card
-          )
-        }));
+      setCardAsStarter: async (cardId, isStarter = true) => {
+        try {
+          const card = get().getCardById(cardId);
+          if (card) {
+            const updatedCard = { ...card, category: isStarter ? 'starter' : card.category };
+            await get().updateCard(updatedCard);
+          }
+        } catch (error) {
+          console.error('Error setting card as starter:', error);
+        }
       },
 
       // Class Management
@@ -141,23 +170,19 @@ export const useStore = create(
       addTask: (task) => set(state => ({
         tasks: [...state.tasks, { ...task, id: task.id || `task-${Date.now()}` }]
       })),
-
       updateTask: (taskId, updatedTask) => set(state => ({
         tasks: state.tasks.map(task =>
           task.id === taskId ? { ...task, ...updatedTask } : task
         )
       })),
-
       deleteTask: (taskId) => set(state => ({
         tasks: state.tasks.filter(task => task.id !== taskId)
       })),
-
       updateTaskProgress: (taskId, progress) => set(state => ({
         tasks: state.tasks.map(task =>
           task.id === taskId ? { ...task, progress } : task
         )
       })),
-
       completeTask: (taskId) => {
         const state = get();
         if (taskId === 'lucky-roll-daily') {
