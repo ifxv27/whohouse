@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
-import { API_URL } from '../config';
+import { API_CONFIG } from '../config';
 
 const CARD_RANKS = {
   COMMON: { value: 1, stars: '⭐' },
@@ -58,7 +58,7 @@ export const useStore = create(
       // Fetch cards from backend
       fetchCards: async () => {
         try {
-          const response = await axios.get(`${API_URL}/api/cards`);
+          const response = await axios.get(`${API_CONFIG.BASE_URL}/api/cards`);
           set({ cards: response.data });
         } catch (error) {
           console.error('Error fetching cards:', error);
@@ -68,7 +68,7 @@ export const useStore = create(
       // Card Management
       addCard: async (card) => {
         try {
-          const response = await axios.post(`${API_URL}/api/cards`, card);
+          const response = await axios.post(`${API_CONFIG.BASE_URL}/api/cards`, card);
           set(state => ({
             cards: [...state.cards, response.data]
           }));
@@ -79,7 +79,7 @@ export const useStore = create(
 
       updateCard: async (updatedCard) => {
         try {
-          await axios.put(`${API_URL}/api/cards/${updatedCard.id}`, updatedCard);
+          await axios.put(`${API_CONFIG.BASE_URL}/api/cards/${updatedCard.id}`, updatedCard);
           set(state => ({
             cards: state.cards.map(card =>
               card.id === updatedCard.id ? updatedCard : card
@@ -92,7 +92,7 @@ export const useStore = create(
 
       deleteCard: async (id) => {
         try {
-          await axios.delete(`${API_URL}/api/cards/${id}`);
+          await axios.delete(`${API_CONFIG.BASE_URL}/api/cards/${id}`);
           set(state => ({
             cards: state.cards.filter(card => card.id !== id)
           }));
